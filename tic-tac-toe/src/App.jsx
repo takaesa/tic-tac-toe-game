@@ -177,6 +177,13 @@ const App = () => {
       </div>
       <div>
         <h1 className="game-heading water-background">Tic Tac Toe</h1>
+        {!finishedState && (
+          <h2 className="turn-message">
+            {currentPlayer === playingAs
+              ? " Your Turn"
+              : " Waiting for Opponent..."}
+          </h2>
+        )}
         <div className="square-wrapper">
           {gameState.map((arr, rowIndex) =>
             arr.map((e, colIndex) => {
