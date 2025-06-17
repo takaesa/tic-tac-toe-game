@@ -13,7 +13,6 @@ const allUsers = {};
 const rematchRequests = {};
 const rooms = {};
 
-// Tạo game state mặc định
 function createDefaultGameState() {
   return [
     [1, 2, 3],
@@ -22,7 +21,6 @@ function createDefaultGameState() {
   ];
 }
 
-// Kiểm tra thắng/thua/hòa
 function checkWinner(gameState) {
   for (let row = 0; row < 3; row++) {
     if (
@@ -90,7 +88,6 @@ io.on("connection", (socket) => {
       currentUser.roomName = roomName;
       opponentPlayer.roomName = roomName;
 
-      // Chuẩn hóa phân quyền
       rooms[roomName] = {
         gameState: createDefaultGameState(),
         currentTurn: "circle",
@@ -134,7 +131,6 @@ io.on("connection", (socket) => {
   // FRIEND ROOM MODE
   socket.on("join_room_by_id", ({ playerName, roomName, password, create }) => {
     if (create) {
-      // Chỉ kiểm tra phòng đã tồn tại chưa
       if (!rooms[roomName]) {
         rooms[roomName] = {
           players: {
@@ -143,17 +139,18 @@ io.on("connection", (socket) => {
           gameState: createDefaultGameState(),
           currentTurn: "circle",
           finished: false,
-          password, // lưu pass phòng
+          password,
         };
         socket.join(roomName);
         socket.roomName = roomName;
         socket.playingAs = "circle";
         socket.emit("OpponentNotFound", { roomName });
+      } else if (Object.keys(rooms[roomName].players).length >= 2) {
+        socket.emit("roomFull");
       } else {
         socket.emit("roomAlreadyExists");
       }
     } else {
-      // Join phòng đã có (friend mode)
       if (!rooms[roomName]) {
         socket.emit("roomNotFound");
         return;
@@ -163,13 +160,11 @@ io.on("connection", (socket) => {
         return;
       }
       if (Object.keys(rooms[roomName].players).length === 1) {
-        // Chỉ join nếu phòng chỉ có 1 người
         const firstSocketId = Object.keys(rooms[roomName].players)[0];
         rooms[roomName].players[socket.id] = { playerName, sign: "cross" };
         socket.join(roomName);
         socket.roomName = roomName;
         socket.playingAs = "cross";
-        // Notify cả 2
         const opponent = rooms[roomName].players[firstSocketId];
         socket.emit("OpponentFound", {
           opponentName: opponent.playerName,
@@ -187,13 +182,12 @@ io.on("connection", (socket) => {
     }
   });
 
-  // NHẬN MOVE, KIỂM TRA HỢP LỆ
+  // GAME LOGIC
   socket.on("player_move", ({ id, roomName, sign }) => {
     if (!rooms[roomName]) return;
     const room = rooms[roomName];
     if (room.finished) return;
 
-    // Phải đúng lượt, đúng người
     if (room.currentTurn !== sign) return;
     if (!room.players[socket.id] || room.players[socket.id].sign !== sign)
       return;
@@ -221,7 +215,6 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Nếu chưa ai thắng/hòa thì gửi như cũ (finished: false)
     room.currentTurn = sign === "circle" ? "cross" : "circle";
     io.to(roomName).emit("playerMoveFromServer", {
       state: { id, sign },
@@ -249,7 +242,6 @@ io.on("connection", (socket) => {
 
   socket.on("rematch_declined", ({ roomName }) => {
     socket.to(roomName).emit("rematch_declined_by_opponent");
-    // Optionally: delete rooms[roomName] if you want to clear
   });
 
   // DISCONNECT
@@ -261,12 +253,16 @@ io.on("connection", (socket) => {
       waitingPlayer = null;
     }
 
-    if (roomName) {
+    if (roomName && rooms[roomName]) {
       socket.to(roomName).emit("opponentLeftMatch");
-      delete rooms[roomName];
+      if (rooms[roomName].players[socket.id]) {
+        delete rooms[roomName].players[socket.id];
+      }
+      if (Object.keys(rooms[roomName].players).length === 0) {
+        delete rooms[roomName];
+      }
     }
 
-    // Clean up rematch requests
     if (roomName && rematchRequests[roomName]) {
       rematchRequests[roomName].delete(socket.id);
       if (rematchRequests[roomName].size === 0) {

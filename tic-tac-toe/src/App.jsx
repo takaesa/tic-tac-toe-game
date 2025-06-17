@@ -93,6 +93,27 @@ const App = () => {
     }
   }, [finishedState, playingAs, roomName, socket]);
 
+  // popup for player left the game
+  useEffect(() => {
+    if (finishedState === "opponentLeftMatch") {
+      Swal.fire({
+        title: "You won!",
+        text: "Opponent has left the match.",
+        icon: "info",
+        confirmButtonText: "Back to menu",
+      }).then(() => {
+        setPlayOnline(false);
+        setOpponentName(null);
+        setPlayingAs(null);
+        setRoomName(null);
+        setFinishedArrayState([]);
+        setFinishetState(false);
+        setGameState(defaultGameState.map((row) => [...row]));
+        setRematchRequested(false);
+        setRematchRequestReceived(false);
+      });
+    }
+  }, [finishedState]);
   // ---- Popup for Opponent requests rematch ----
   useEffect(() => {
     if (rematchRequestReceived) {
@@ -207,6 +228,25 @@ const App = () => {
       });
       joinWithFriendsSmart();
     });
+    socket.on("roomFull", async () => {
+      setPlayOnline(false);
+      setOpponentName(null);
+      setPlayingAs(null);
+      setRoomName(null);
+      setFinishedArrayState([]);
+      setFinishetState(false);
+      setGameState(defaultGameState.map((row) => [...row]));
+      setRematchRequested(false);
+      setRematchRequestReceived(false);
+
+      await Swal.fire({
+        icon: "error",
+        title: "Room is full",
+        text: "This Room ID already has 2 players. Please choose another Room ID.",
+        confirmButtonText: "Try Another Room",
+      });
+      joinWithFriendsSmart(); // Mở lại UI nhập phòng
+    });
 
     socket.on("roomNotFound", () => {
       Swal.fire("Room not found!", "", "error");
@@ -230,6 +270,7 @@ const App = () => {
       );
       socket.off("roomAlreadyExists");
       socket.off("roomInUse");
+      socket.off("roomFull");
       socket.off("roomNotFound");
       socket.off("wrongRoomPassword");
     };
@@ -286,7 +327,6 @@ const App = () => {
     });
   }
 
-  // ---- UI ----
   if (!playOnline) {
     return (
       <div>
@@ -424,9 +464,7 @@ const App = () => {
         {!finishedState && opponentName && (
           <h2>You are playing against {opponentName}</h2>
         )}
-        {finishedState && finishedState === "opponentLeftMatch" && (
-          <h2>You won the match, Opponent has left</h2>
-        )}
+
         <h3>Room ID: {roomName}</h3>
       </div>
     </div>
