@@ -1,150 +1,345 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import Square from "./Square/Square";
-import { io } from "socket.io-client";
 import Swal from "sweetalert2";
+import useSocket from "./hooks/useSocket";
 
-const renderFrom = [
+const defaultGameState = [
   [1, 2, 3],
   [4, 5, 6],
   [7, 8, 9],
 ];
 
 const App = () => {
-  const [gameState, setGameState] = useState(renderFrom);
+  const [gameState, setGameState] = useState(defaultGameState);
   const [currentPlayer, setCurrentPlayer] = useState("circle");
   const [finishedState, setFinishetState] = useState(false);
   const [finishedArrayState, setFinishedArrayState] = useState([]);
   const [playOnline, setPlayOnline] = useState(false);
-  const [socket, setSocket] = useState(null);
   const [playerName, setPlayerName] = useState("");
   const [opponentName, setOpponentName] = useState(null);
   const [playingAs, setPlayingAs] = useState(null);
+  const [roomName, setRoomName] = useState(null);
+  const [rematchRequested, setRematchRequested] = useState(false);
+  const [rematchRequestReceived, setRematchRequestReceived] = useState(false);
+  const [mode, setMode] = useState(null); // "random" | "friend"
 
-  const checkWinner = () => {
-    // row dynamic
-    for (let row = 0; row < gameState.length; row++) {
-      if (
-        gameState[row][0] === gameState[row][1] &&
-        gameState[row][1] === gameState[row][2]
-      ) {
-        setFinishedArrayState([row * 3 + 0, row * 3 + 1, row * 3 + 2]);
-        return gameState[row][0];
-      }
-    }
+  const { socket } = useSocket("http://localhost:3000");
 
-    // column dynamic
-    for (let col = 0; col < gameState.length; col++) {
-      if (
-        gameState[0][col] === gameState[1][col] &&
-        gameState[1][col] === gameState[2][col]
-      ) {
-        setFinishedArrayState([0 * 3 + col, 1 * 3 + col, 2 * 3 + col]);
-        return gameState[0][col];
-      }
-    }
-
-    if (
-      gameState[0][0] === gameState[1][1] &&
-      gameState[1][1] === gameState[2][2]
-    ) {
-      return gameState[0][0];
-    }
-
-    if (
-      gameState[0][2] === gameState[1][1] &&
-      gameState[1][1] === gameState[2][0]
-    ) {
-      return gameState[0][2];
-    }
-
-    const isDrawMatch = gameState.flat().every((e) => {
-      if (e === "circle" || e === "cross") return true;
-    });
-
-    if (isDrawMatch) return "draw";
-
-    return null;
+  const resetGame = () => {
+    setGameState(defaultGameState.map((row) => [...row]));
+    setCurrentPlayer("circle");
+    setFinishetState(false);
+    setFinishedArrayState([]);
+    setRematchRequested(false);
   };
-
-  useEffect(() => {
-    const winner = checkWinner();
-    if (winner) {
-      setFinishetState(winner);
-    }
-  }, [gameState]);
 
   const takePlayerName = async () => {
     const result = await Swal.fire({
       title: "Enter your name",
       input: "text",
       showCancelButton: true,
-      inputValidator: (value) => {
-        if (!value) {
-          return "You need to write something!";
-        }
-      },
+      inputValidator: (value) =>
+        !value ? "You need to write something!" : null,
     });
-
     return result;
   };
 
-  socket?.on("opponentLeftMatch", () => {
-    setFinishetState("opponentLeftMatch");
-  });
+  // ---- Popup for Finished game ----
+  useEffect(() => {
+    if (finishedState && finishedState !== "opponentLeftMatch") {
+      Swal.fire({
+        title:
+          finishedState === "draw"
+            ? "It's a Draw"
+            : finishedState === playingAs
+            ? "You Won!"
+            : `${finishedState} won the game`,
+        icon: finishedState === "draw" ? "info" : "success",
+        showDenyButton: true,
+        confirmButtonText: "Rematch",
+        denyButtonText: "Close",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          if (roomName) {
+            socket.emit("request_rematch", { roomName });
+            setRematchRequested(true);
+            Swal.fire({
+              title: "Waiting for opponent...",
+              html: "Waiting for opponent to accept the rematch.",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              didOpen: () => {
+                Swal.showLoading();
+              },
+            });
+          }
+        }
+        if (result.isDenied) {
+          if (roomName) {
+            socket.emit("rematch_declined", { roomName });
+          }
+          setPlayOnline(false);
+          setOpponentName(null);
+          setPlayingAs(null);
+          setRoomName(null);
+          setFinishedArrayState([]);
+          setFinishetState(false);
+          setGameState(defaultGameState.map((row) => [...row]));
+          setRematchRequested(false);
+          setRematchRequestReceived(false);
+        }
+      });
+    }
+  }, [finishedState, playingAs, roomName, socket]);
 
-  socket?.on("playerMoveFromServer", (data) => {
-    const id = data.state.id;
-    setGameState((prevState) => {
-      let newState = [...prevState];
-      const rowIndex = Math.floor(id / 3);
-      const colIndex = id % 3;
-      newState[rowIndex][colIndex] = data.state.sign;
-      return newState;
+  // ---- Popup for Opponent requests rematch ----
+  useEffect(() => {
+    if (rematchRequestReceived) {
+      Swal.fire({
+        title: "Opponent wants a rematch!",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Accept Rematch",
+        cancelButtonText: "Decline",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          if (roomName) socket.emit("request_rematch", { roomName });
+          setRematchRequestReceived(false);
+        } else {
+          setRematchRequestReceived(false);
+        }
+      });
+    }
+  }, [rematchRequestReceived, roomName, socket]);
+
+  // ---- Handle Socket Events ----
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleOpponentLeftMatch = () => setFinishetState("opponentLeftMatch");
+
+    const handlePlayerMoveFromServer = (data) => {
+      const id = data.state.id;
+      const sign = data.state.sign;
+      setGameState((prevState) => {
+        let newState = prevState.map((row) => [...row]);
+        const rowIndex = Math.floor(id / 3);
+        const colIndex = id % 3;
+        newState[rowIndex][colIndex] = sign;
+        return newState;
+      });
+      setCurrentPlayer(sign === "circle" ? "cross" : "circle");
+
+      if (data.finished && data.winner) {
+        setFinishetState(data.winner);
+        setFinishedArrayState(data.winArray || []);
+      } else {
+        setFinishetState(false);
+        setFinishedArrayState([]);
+      }
+    };
+
+    const handleOpponentNotFound = (data) => {
+      setOpponentName(false);
+      if (data && data.roomName) setRoomName(data.roomName);
+    };
+
+    const handleOpponentFound = (data) => {
+      setPlayingAs(data.playingAs);
+      setOpponentName(data.opponentName);
+      setRoomName(data.roomName);
+    };
+
+    const handleRematchRequested = () => {
+      setRematchRequestReceived(true);
+      setRematchRequested(true);
+    };
+
+    const handleRematchAccepted = () => {
+      Swal.close();
+      resetGame();
+    };
+
+    const handleRematchDeclinedByOpponent = () => {
+      Swal.fire({
+        title: "Rematch Declined",
+        text: "Your opponent declined the rematch or left the game.",
+        icon: "info",
+        confirmButtonText: "OK",
+      }).then(() => {
+        setPlayOnline(false);
+        setOpponentName(null);
+        setPlayingAs(null);
+        setRoomName(null);
+        setFinishedArrayState([]);
+        setFinishetState(false);
+        setGameState(defaultGameState.map((row) => [...row]));
+        setRematchRequested(false);
+        setRematchRequestReceived(false);
+      });
+    };
+
+    socket.on("opponentLeftMatch", handleOpponentLeftMatch);
+    socket.on("playerMoveFromServer", handlePlayerMoveFromServer);
+    socket.on("OpponentNotFound", handleOpponentNotFound);
+    socket.on("OpponentFound", handleOpponentFound);
+    socket.on("rematch_requested", handleRematchRequested);
+    socket.on("rematch_accepted", handleRematchAccepted);
+    socket.on("rematch_declined_by_opponent", handleRematchDeclinedByOpponent);
+
+    socket.on("roomAlreadyExists", async () => {
+      await Swal.fire({
+        icon: "error",
+        title: "Room already exists!",
+        text: "Please choose a different Room ID.",
+        confirmButtonText: "Try Again",
+      });
+      joinWithFriendsSmart();
     });
-    setCurrentPlayer(data.state.sign === "circle" ? "cross" : "circle");
-  });
 
-  socket?.on("connect", function () {
-    setPlayOnline(true);
-  });
+    socket.on("roomInUse", async () => {
+      await Swal.fire({
+        icon: "error",
+        title: "Room is currently in use",
+        text: "This Room ID is already used for another game. Please choose a different Room ID.",
+        confirmButtonText: "OK",
+      });
+      joinWithFriendsSmart();
+    });
 
-  socket?.on("OpponentNotFound", function () {
-    setOpponentName(false);
-  });
+    socket.on("roomNotFound", () => {
+      Swal.fire("Room not found!", "", "error");
+      setPlayOnline(false);
+    });
+    socket.on("wrongRoomPassword", () => {
+      Swal.fire("Incorrect password!", "", "error");
+      setPlayOnline(false);
+    });
 
-  socket?.on("OpponentFound", function (data) {
-    setPlayingAs(data.playingAs);
-    setOpponentName(data.opponentName);
-  });
+    return () => {
+      socket.off("opponentLeftMatch", handleOpponentLeftMatch);
+      socket.off("playerMoveFromServer", handlePlayerMoveFromServer);
+      socket.off("OpponentNotFound", handleOpponentNotFound);
+      socket.off("OpponentFound", handleOpponentFound);
+      socket.off("rematch_requested", handleRematchRequested);
+      socket.off("rematch_accepted", handleRematchAccepted);
+      socket.off(
+        "rematch_declined_by_opponent",
+        handleRematchDeclinedByOpponent
+      );
+      socket.off("roomAlreadyExists");
+      socket.off("roomInUse");
+      socket.off("roomNotFound");
+      socket.off("wrongRoomPassword");
+    };
+  }, [socket]);
 
+  // ---- Play Online with Randoms ----
   async function playOnlineClick() {
     const result = await takePlayerName();
-
-    if (!result.isConfirmed) {
-      return;
-    }
-
+    if (!result.isConfirmed) return;
     const username = result.value;
     setPlayerName(username);
-
-    const newSocket = io("http://localhost:3000", {
-      autoConnect: true,
-    });
-
-    newSocket?.emit("request_to_play", {
-      playerName: username,
-    });
-
-    setSocket(newSocket);
+    socket.emit("request_to_play", { playerName: username });
+    setMode("random");
+    setPlayOnline(true);
   }
 
+  // ---- Single Smart handler for create/join friend room ----
+  async function joinWithFriendsSmart() {
+    const nameResult = await takePlayerName();
+    if (!nameResult.isConfirmed) return;
+    const username = nameResult.value;
+
+    const roomResult = await Swal.fire({
+      title: "Enter Room ID",
+      input: "text",
+      showCancelButton: true,
+      inputValidator: (value) =>
+        !value ? "You need to write a Room ID!" : null,
+    });
+    if (!roomResult.isConfirmed) return;
+    const roomID = roomResult.value;
+
+    socket.emit("check_room_exists", { roomName: roomID }, async (resp) => {
+      const passwordResult = await Swal.fire({
+        title: resp.exists
+          ? "Enter Room Password"
+          : "Create a Password for Room",
+        input: "password",
+        showCancelButton: true,
+        inputValidator: (value) =>
+          !value ? "You need to enter a password!" : null,
+      });
+      if (!passwordResult.isConfirmed) return;
+
+      setPlayerName(username);
+      setMode("friend");
+      setPlayOnline(true);
+      socket.emit("join_room_by_id", {
+        playerName: username,
+        roomName: roomID,
+        password: passwordResult.value,
+        create: !resp.exists,
+      });
+    });
+  }
+
+  // ---- UI ----
   if (!playOnline) {
     return (
-      <div className="main-div">
-        <button onClick={playOnlineClick} className="playOnline">
-          Play Online
-        </button>
+      <div>
+        <h1
+          className="game-heading water-background"
+          style={{ marginTop: "20vh" }}
+        >
+          Let's have fun with Tic Tac Toe
+        </h1>
+        <div className="main-div">
+          <div className="randoms-container">
+            <h2>Join with Randoms</h2>
+            <button
+              onClick={playOnlineClick}
+              className="playOnline"
+              style={{ justifySelf: "flex-end" }}
+            >
+              Play Now
+            </button>
+          </div>
+          <div style={{ textAlign: "center", margin: "8px 0" }}>
+            <hr
+              style={{
+                width: "80px",
+                display: "inline-block",
+                border: "1px solid #ccc",
+              }}
+            />
+            <span
+              style={{
+                margin: "0 12px",
+                color: "#888",
+                fontWeight: "bold",
+                fontSize: "40px",
+              }}
+            >
+              OR
+            </span>
+            <hr
+              style={{
+                width: "80px",
+                display: "inline-block",
+                border: "1px solid #ccc",
+              }}
+            />
+          </div>
+          <div className="friends-container">
+            <h2>Join with Friends</h2>
+            <button onClick={joinWithFriendsSmart} className="playOnline">
+              Let's go
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -153,78 +348,87 @@ const App = () => {
     return (
       <div className="waiting">
         <p>Waiting for opponent</p>
+        {mode === "friend" && (
+          <div>
+            <p>
+              Room ID: <strong>{roomName}</strong>
+            </p>
+            <p>Send this Room ID to your friend so they can join!</p>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="main-div">
-      <div className="move-detection">
-        <div
-          className={`left ${
-            currentPlayer === playingAs ? "current-move-" + currentPlayer : ""
-          }`}
-        >
-          {playerName}
-        </div>
-        <div
-          className={`right ${
-            currentPlayer !== playingAs ? "current-move-" + currentPlayer : ""
-          }`}
-        >
-          {opponentName}
-        </div>
-      </div>
-      <div>
-        <h1 className="game-heading water-background">Tic Tac Toe</h1>
-        {!finishedState && (
-          <h2 className="turn-message">
-            {currentPlayer === playingAs
-              ? " Your Turn"
-              : " Waiting for Opponent..."}
-          </h2>
-        )}
-        <div className="square-wrapper">
-          {gameState.map((arr, rowIndex) =>
-            arr.map((e, colIndex) => {
-              return (
+    <div>
+      <h1 className="game-heading water-background">Tic Tac Toe</h1>
+      <div className="main-div">
+        <div></div>
+        <div>
+          <div className="move-detection">
+            <div
+              className={`left ${
+                currentPlayer === playingAs
+                  ? "current-move-" + currentPlayer
+                  : ""
+              }`}
+            >
+              {playerName}
+            </div>
+            <div
+              className={`right ${
+                currentPlayer !== playingAs
+                  ? "current-move-" + currentPlayer
+                  : ""
+              }`}
+            >
+              {opponentName}
+            </div>
+          </div>
+          {!finishedState && (
+            <h2 className="turn-message">
+              {currentPlayer === playingAs
+                ? " Your Turn"
+                : " Waiting for Opponent..."}
+            </h2>
+          )}
+          <div className="square-wrapper">
+            {gameState.map((arr, rowIndex) =>
+              arr.map((e, colIndex) => (
                 <Square
+                  roomName={roomName}
                   socket={socket}
                   playingAs={playingAs}
                   gameState={gameState}
                   finishedArrayState={finishedArrayState}
                   finishedState={finishedState}
                   currentPlayer={currentPlayer}
-                  setCurrentPlayer={setCurrentPlayer}
-                  setGameState={setGameState}
                   id={rowIndex * 3 + colIndex}
                   key={rowIndex * 3 + colIndex}
                   currentElement={e}
                 />
-              );
-            })
-          )}
+              ))
+            )}
+          </div>
         </div>
-        {finishedState &&
-          finishedState !== "opponentLeftMatch" &&
-          finishedState !== "draw" && (
-            <h3 className="finished-state">
-              {finishedState === playingAs ? "You " : finishedState} won the
-              game
-            </h3>
-          )}
-        {finishedState &&
-          finishedState !== "opponentLeftMatch" &&
-          finishedState === "draw" && (
-            <h3 className="finished-state">It's a Draw</h3>
-          )}
       </div>
-      {!finishedState && opponentName && (
-        <h2>You are playing against {opponentName}</h2>
-      )}
-      {finishedState && finishedState === "opponentLeftMatch" && (
-        <h2>You won the match, Opponent has left</h2>
-      )}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {!finishedState && opponentName && (
+          <h2>You are playing against {opponentName}</h2>
+        )}
+        {finishedState && finishedState === "opponentLeftMatch" && (
+          <h2>You won the match, Opponent has left</h2>
+        )}
+        <h3>Room ID: {roomName}</h3>
+      </div>
     </div>
   );
 };
