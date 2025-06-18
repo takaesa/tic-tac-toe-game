@@ -2,8 +2,6 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   gap: 1rem;
-  width: auto;
-  height: 60vh;
   align-items: center;
   justify-content: center;
 }
@@ -37,16 +35,18 @@
 
 .square-wrapper {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  row-gap: 10px;
-  column-gap: 10px;
+  grid-template-columns: repeat(30, 1fr);
+  width: max-content;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow: auto;
 }
 
 .move-detection {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4rem;
+  margin-bottom: 2rem;
 }
 
 .finished-state {

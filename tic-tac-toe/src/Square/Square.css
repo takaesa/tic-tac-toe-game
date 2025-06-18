@@ -1,8 +1,15 @@
 .square {
-  width: 100px;
-  height: 100px;
+  width: 20px;
+  height: 18px;
   background-color: #4b495f;
-  border-radius: 5px;
+  border-radius: 1px;
+  padding: 1px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  margin: 1px;
 }
 
 .square:hover {

@@ -1,6 +1,5 @@
 import React from "react";
 import "./Square.css";
-
 const circleSvg = (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -35,12 +34,13 @@ const Square = ({
   id,
   currentPlayer,
   roomName,
+  BOARD_SIZE,
 }) => {
   const handleClick = () => {
     if (finishedState) return; // Đã kết thúc game, không cho click
     if (currentPlayer !== playingAs) return; // Không phải lượt mình
-    const rowIndex = Math.floor(id / 3);
-    const colIndex = id % 3;
+    const rowIndex = Math.floor(id / BOARD_SIZE);
+    const colIndex = id % BOARD_SIZE;
     if (
       gameState[rowIndex][colIndex] === "circle" ||
       gameState[rowIndex][colIndex] === "cross"

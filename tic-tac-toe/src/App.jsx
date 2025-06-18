@@ -4,11 +4,11 @@ import Square from "./Square/Square";
 import Swal from "sweetalert2";
 import useSocket from "./hooks/useSocket";
 
-const defaultGameState = [
-  [1, 2, 3],
-  [4, 5, 6],
-  [7, 8, 9],
-];
+const BOARD_SIZE = 30;
+
+const defaultGameState = Array.from({ length: BOARD_SIZE }, (_, row) =>
+  Array.from({ length: BOARD_SIZE }, (_, col) => row * BOARD_SIZE + col + 1)
+);
 
 const App = () => {
   const [gameState, setGameState] = useState(defaultGameState);
@@ -146,8 +146,8 @@ const App = () => {
       const sign = data.state.sign;
       setGameState((prevState) => {
         let newState = prevState.map((row) => [...row]);
-        const rowIndex = Math.floor(id / 3);
-        const colIndex = id % 3;
+        const rowIndex = Math.floor(id / BOARD_SIZE);
+        const colIndex = id % BOARD_SIZE;
         newState[rowIndex][colIndex] = sign;
         return newState;
       });
@@ -196,7 +196,14 @@ const App = () => {
         setRoomName(null);
         setFinishedArrayState([]);
         setFinishetState(false);
-        setGameState(defaultGameState.map((row) => [...row]));
+        setGameState(
+          Array.from({ length: BOARD_SIZE }, (_, row) =>
+            Array.from(
+              { length: BOARD_SIZE },
+              (_, col) => row * BOARD_SIZE + col + 1
+            )
+          )
+        );
         setRematchRequested(false);
         setRematchRequestReceived(false);
       });
@@ -438,6 +445,7 @@ const App = () => {
             {gameState.map((arr, rowIndex) =>
               arr.map((e, colIndex) => (
                 <Square
+                  BOARD_SIZE={BOARD_SIZE}
                   roomName={roomName}
                   socket={socket}
                   playingAs={playingAs}
@@ -445,8 +453,8 @@ const App = () => {
                   finishedArrayState={finishedArrayState}
                   finishedState={finishedState}
                   currentPlayer={currentPlayer}
-                  id={rowIndex * 3 + colIndex}
-                  key={rowIndex * 3 + colIndex}
+                  id={rowIndex * BOARD_SIZE + colIndex}
+                  key={rowIndex * BOARD_SIZE + colIndex}
                   currentElement={e}
                 />
               ))
