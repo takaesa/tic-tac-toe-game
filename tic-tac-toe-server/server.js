@@ -296,12 +296,9 @@ io.on("connection", (socket) => {
         delete rooms[roomName].players[socket.id];
       }
 
+      // Dọn dẹp phòng ngay lập tức khi không còn người chơi
       if (Object.keys(rooms[roomName].players).length <= 1) {
-        if (rooms[roomName].cleanupTimeout) {
-          clearTimeout(rooms[roomName].cleanupTimeout);
-          delete rooms[roomName].cleanupTimeout;
-        }
-        cleanupRoom(roomName);
+        cleanupRoom(roomName);  // Dọn dẹp phòng ngay lập tức
       }
     }
 

@@ -1,33 +1,82 @@
+/* Square.css - File CSS cho từng ô cờ */
+
 .square {
-  width: 20px;
-  height: 18px;
-  background-color: #4b495f;
-  border-radius: 1px;
-  padding: 1px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 8px;
-  margin: 1px;
+  background-color: #4b495f; /* Màu nền ô cờ */
+  border-radius: 1px; /* Bo tròn nhẹ góc */
+  padding: 1px; /* Padding nhỏ bên trong */
+  box-sizing: border-box; /* Quan trọng: padding không làm tăng kích thước tổng thể của ô */
+  display: flex; /* Sử dụng flexbox để căn giữa nội dung */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  justify-content: center; /* Căn giữa theo chiều ngang */
+  margin: 0.5px; /* Giảm margin giữa các ô để chúng gần nhau hơn */
+  flex-grow: 1; /* Cho phép ô co giãn để chiếm không gian trong grid */
+  flex-shrink: 1; /* Cho phép ô co lại khi không gian hạn chế */
+  flex-basis: 0; /* Base size 0, để flex-grow/shrink kiểm soát kích thước */
+  aspect-ratio: 1 / 1; /* Rất quan trọng: Giữ tỉ lệ 1:1 (hình vuông) cho mỗi ô */
+  overflow: hidden; /* Đảm bảo nội dung (SVG) không tràn ra ngoài ô */
+  position: relative; /* Có thể dùng cho các hiệu ứng phức tạp hơn sau này */
 }
 
+/* Đảm bảo SVG (icon O/X) bên trong square tự động co giãn */
+.square svg {
+  width: 80%; /* Chiếm 80% chiều rộng của ô */
+  height: 80%; /* Chiếm 80% chiều cao của ô */
+  max-width: 100%; /* Đảm bảo không tràn */
+  max-height: 100%; /* Đảm bảo không tràn */
+  display: block; /* Loại bỏ khoảng trắng thừa dưới SVG */
+  transition: transform 0.2s ease-out; /* Hiệu ứng chuyển động nhỏ khi xuất hiện */
+}
+
+/* Các trạng thái tương tác và kết thúc game */
 .square:hover {
   cursor: pointer;
+  background-color: rgba(75, 73, 95, 0.7); /* Màu nền đậm hơn khi hover */
 }
 
 .not-allowed {
-  cursor: not-allowed !important;
+  cursor: not-allowed !important; /* Thay đổi con trỏ chuột khi không được phép click */
+  opacity: 0.7; /* Giảm độ mờ để biểu thị không thể click */
 }
 
+/* Style cho các ô chiến thắng của 'O' (circle) */
 .circle-won {
-  background-color: #dd7f9f;
+  background-color: var(--accent-color-2); /* Sử dụng màu cam từ App.css */
+  box-shadow: 0 0 8px var(--accent-color-2), inset 0 0 5px rgba(255, 255, 255, 0.3); /* Thêm bóng đổ phát sáng */
+  transform: scale(1.05); /* Hiệu ứng phóng to nhẹ khi highlight */
+  transition: all 0.3s ease; /* Chuyển động mượt mà */
 }
 
-.grey-background {
-  background-color: grey !important;
-}
-
+/* Style cho các ô chiến thắng của 'X' (cross) */
 .cross-won {
-  background-color: rgb(63, 167, 240);
+  background-color: var(--accent-color-1); /* Sử dụng màu xanh dương từ App.css */
+  box-shadow: 0 0 8px var(--accent-color-1), inset 0 0 5px rgba(255, 255, 255, 0.3); /* Thêm bóng đổ phát sáng */
+  transform: scale(1.05); /* Hiệu ứng phóng to nhẹ khi highlight */
+  transition: all 0.3s ease; /* Chuyển động mượt mà */
+}
+
+/* Nền xám cho các ô không thuộc về người thắng khi game kết thúc */
+.grey-background {
+  background-color: #555 !important; /* Màu xám đậm hơn */
+  opacity: 0.6; /* Giảm độ mờ */
+}
+
+/* Keyframe animation cho icon khi xuất hiện */
+@keyframes popIn {
+  0% {
+    transform: scale(0); /* Bắt đầu từ kích thước 0 */
+    opacity: 0; /* Bắt đầu từ trong suốt */
+  }
+  80% {
+    transform: scale(1.1); /* Phóng to hơn một chút */
+    opacity: 1; /* Hiển thị hoàn toàn */
+  }
+  100% {
+    transform: scale(1); /* Về kích thước bình thường */
+    opacity: 1;
+  }
+}
+
+/* Áp dụng animation khi SVG xuất hiện trong ô */
+.square svg {
+  animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Animation popIn với easing đặc biệt */
 }
