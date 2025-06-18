@@ -1,0 +1,4 @@
+tic-tac-toe-server/node_modules
+tic-tac-toe/.env
+tic-tac-toe-server/.env
+.DS_Store
