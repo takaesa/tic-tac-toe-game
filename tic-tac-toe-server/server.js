@@ -232,10 +232,7 @@ io.on("connection", (socket) => {
         winArray: check.winArray,
       });
       if (!room.cleanupTimeout) {
-        room.cleanupTimeout = setTimeout(
-          () => cleanupRoom(roomName),
-          10 * 1000
-        );
+        room.cleanupTimeout = setTimeout(() => cleanupRoom(roomName), 5 * 1000);
       }
       return;
     }

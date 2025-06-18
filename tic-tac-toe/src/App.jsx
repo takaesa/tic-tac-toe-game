@@ -165,12 +165,14 @@ const App = () => {
     const handleOpponentNotFound = (data) => {
       setOpponentName(false);
       if (data && data.roomName) setRoomName(data.roomName);
+      setPlayOnline(true);
     };
 
     const handleOpponentFound = (data) => {
       setPlayingAs(data.playingAs);
       setOpponentName(data.opponentName);
       setRoomName(data.roomName);
+      setPlayOnline(true);
     };
 
     const handleRematchRequested = () => {
@@ -207,6 +209,41 @@ const App = () => {
         setRematchRequested(false);
         setRematchRequestReceived(false);
       });
+    };
+    const wrongPasswordHandler = async () => {
+      await Swal.fire({
+        icon: "error",
+        title: "Incorrect password!",
+        text: "Please re-enter the room password.",
+        confirmButtonText: "Try Again",
+      });
+      if (mode === "friend" && roomName) {
+        const passwordResult = await Swal.fire({
+          title: "Enter Room Password",
+          input: "password",
+          showCancelButton: true,
+          inputValidator: (value) =>
+            !value ? "You need to enter a password!" : null,
+        });
+        if (passwordResult.isConfirmed) {
+          socket.emit("join_room_by_id", {
+            playerName,
+            roomName,
+            password: passwordResult.value,
+            create: false,
+          });
+        } else {
+          setPlayOnline(false);
+          setOpponentName(null);
+          setPlayingAs(null);
+          setRoomName(null);
+          setFinishedArrayState([]);
+          setFinishetState(false);
+          setGameState(defaultGameState.map((row) => [...row]));
+          setRematchRequested(false);
+          setRematchRequestReceived(false);
+        }
+      }
     };
 
     socket.on("opponentLeftMatch", handleOpponentLeftMatch);
@@ -260,10 +297,7 @@ const App = () => {
       Swal.fire("Room not found!", "", "error");
       setPlayOnline(false);
     });
-    socket.on("wrongRoomPassword", () => {
-      Swal.fire("Incorrect password!", "", "error");
-      setPlayOnline(false);
-    });
+    socket.on("wrongRoomPassword", wrongPasswordHandler);
 
     return () => {
       socket.off("opponentLeftMatch", handleOpponentLeftMatch);
@@ -281,8 +315,9 @@ const App = () => {
       socket.off("roomFull");
       socket.off("roomNotFound");
       socket.off("wrongRoomPassword");
+      socket.off("wrongRoomPassword", wrongPasswordHandler);
     };
-  }, [socket]);
+  }, [socket, mode, roomName, playerName]);
 
   // ---- Play Online with Randoms ----
   async function playOnlineClick() {
@@ -325,13 +360,15 @@ const App = () => {
 
       setPlayerName(username);
       setMode("friend");
-      setPlayOnline(true);
+      setRoomName(roomID);
+      // KHÔNG setPlayOnline ở đây
       socket.emit("join_room_by_id", {
         playerName: username,
         roomName: roomID,
         password: passwordResult.value,
         create: !resp.exists,
       });
+      // KHÔNG setPlayOnline(true) ở đây
     });
   }
 
