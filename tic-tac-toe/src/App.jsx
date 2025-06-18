@@ -24,7 +24,8 @@ const App = () => {
   const [rematchRequestReceived, setRematchRequestReceived] = useState(false);
   const [mode, setMode] = useState(null); // "random" | "friend"
 
-  const { socket } = useSocket("http://localhost:3000");
+  const socket_host = process.env.REACT_APP_SOCKET_IO_HOST;
+  const { socket } = useSocket(socket_host);
 
   const resetGame = () => {
     setGameState(defaultGameState.map((row) => [...row]));
