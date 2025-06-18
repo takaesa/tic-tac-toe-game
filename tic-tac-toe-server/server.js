@@ -166,8 +166,6 @@ io.on("connection", (socket) => {
         socket.emit("OpponentNotFound", { roomName });
       } else if (Object.keys(rooms[roomName].players).length >= 2) {
         socket.emit("roomFull");
-      } else {
-        socket.emit("roomAlreadyExists");
       }
     } else {
       if (!rooms[roomName]) {

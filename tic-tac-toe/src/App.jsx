@@ -55,7 +55,7 @@ const App = () => {
             ? "It's a Draw"
             : finishedState === playingAs
             ? "You Won!"
-            : `${finishedState} won the game`,
+            : `Your Opponent won the game`,
         icon: finishedState === "draw" ? "info" : "success",
         showDenyButton: true,
         confirmButtonText: "Rematch",
@@ -254,16 +254,6 @@ const App = () => {
     socket.on("rematch_accepted", handleRematchAccepted);
     socket.on("rematch_declined_by_opponent", handleRematchDeclinedByOpponent);
 
-    socket.on("roomAlreadyExists", async () => {
-      await Swal.fire({
-        icon: "error",
-        title: "Room already exists!",
-        text: "Please choose a different Room ID.",
-        confirmButtonText: "Try Again",
-      });
-      joinWithFriendsSmart();
-    });
-
     socket.on("roomInUse", async () => {
       await Swal.fire({
         icon: "error",
@@ -310,7 +300,6 @@ const App = () => {
         "rematch_declined_by_opponent",
         handleRematchDeclinedByOpponent
       );
-      socket.off("roomAlreadyExists");
       socket.off("roomInUse");
       socket.off("roomFull");
       socket.off("roomNotFound");
@@ -361,14 +350,12 @@ const App = () => {
       setPlayerName(username);
       setMode("friend");
       setRoomName(roomID);
-      // KHÔNG setPlayOnline ở đây
       socket.emit("join_room_by_id", {
         playerName: username,
         roomName: roomID,
         password: passwordResult.value,
         create: !resp.exists,
       });
-      // KHÔNG setPlayOnline(true) ở đây
     });
   }
 
