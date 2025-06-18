@@ -16,7 +16,7 @@ const allUsers = {};
 const rematchRequests = {};
 const rooms = {};
 
-const BOARD_SIZE = 30;
+const BOARD_SIZE = 20;
 
 function createDefaultGameState() {
   return Array.from({ length: BOARD_SIZE }, (_, row) =>
