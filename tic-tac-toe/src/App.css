@@ -10,11 +10,13 @@
   --button-hover: #48bb78; /* Màu xanh lá cây khi hover nút */
   --text-color-light: #e2e8f0; /* Màu chữ sáng */
   --border-color: #4a5568; /* Màu viền xám */
-  --font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font chữ hiện đại */
+  --font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; /* Font chữ hiện đại */
 }
 
 /* Global styles cho toàn bộ trang */
-body, html, #root {
+body,
+html,
+#root {
   margin: 0;
   padding: 0;
   height: 100%; /* Đảm bảo chiếm toàn bộ chiều cao */
@@ -44,7 +46,11 @@ body, html, #root {
   font-size: 2.5rem; /* Kích thước font lớn */
   font-weight: 700;
   color: var(--text-color-light);
-  background: linear-gradient(135deg, #4b495f, #2d3748); /* Gradient nền mượt mà */
+  background: linear-gradient(
+    135deg,
+    #4b495f,
+    #2d3748
+  ); /* Gradient nền mượt mà */
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); /* Đổ bóng sâu hơn */
   margin-bottom: 40px;
   letter-spacing: 1px; /* Khoảng cách chữ */
@@ -82,7 +88,11 @@ body, html, #root {
   display: inline-flex; /* Để căn giữa nội dung nút */
   font-weight: 700;
   border: none;
-  background: linear-gradient(45deg, var(--button-primary), #2f855a); /* Gradient nút */
+  background: linear-gradient(
+    45deg,
+    var(--button-primary),
+    #2f855a
+  ); /* Gradient nút */
   color: white;
   cursor: pointer;
   width: auto;
@@ -213,15 +223,15 @@ body, html, #root {
 /* Wrapper cho bàn cờ Caro */
 .square-wrapper {
   display: grid;
-  /* Chia lưới 30 cột. Mỗi cột có kích thước tối thiểu 20px, tối đa 1fr */
-  grid-template-columns: repeat(var(--board-size), minmax(20px, 1fr));
+  grid-template-columns: repeat(var(--board-size), minmax(30px, 1fr));
   aspect-ratio: 1 / 1; /* Luôn giữ tỉ lệ 1:1 (vuông) */
   max-width: 80vh; /* Chiếm tối đa 95% chiều rộng viewport */
   max-height: 80vh; /* Chiếm tối đa 80% chiều cao viewport */
   overflow: auto; /* Cho phép scroll nếu bàn cờ lớn hơn màn hình */
   border: 2px solid var(--border-color); /* Viền bàn cờ */
-  border-radius: 10px;
+  border-radius: 5px;
   box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5); /* Đổ bóng bên trong */
+  padding: 0.25rem;
 }
 
 /* Chi tiết game (tên đối thủ, mã phòng) */
@@ -236,7 +246,8 @@ body, html, #root {
   font-size: 1.1rem;
 }
 
-.game-details h2, .game-details h3 {
+.game-details h2,
+.game-details h3 {
   margin: 0;
 }
 
@@ -346,11 +357,31 @@ body, html, #root {
     font-size: 1rem;
   }
   .square-wrapper {
-    /* Giảm thêm kích thước tối thiểu của ô trên mobile */
-    grid-template-columns: repeat(var(--board-size), minmax(10px, 1fr));
+    display: grid;
+    grid-template-columns: repeat(var(--board-size), minmax(30px, 1fr));
+    /* Đặt height hoặc max-height hợp lý */
+    max-width: 100vw;
+    height: 90vw; /* Option, chỉ dùng 1 trong 2 */
+    overflow: auto;
+    border: 2px solid var(--border-color);
+    border-radius: 5px;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+    padding: 2px;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .player-info-container {
+    flex-direction: row;
+    gap: 15px;
+    padding: 0;
+  }
+
+  .waiting-screen p {
+    margin: 10px 0;
+    font-size: 1.5rem;
   }
 }
-
 
 /* -------------------- SweetAlert2 Custom Styling -------------------- */
 /* Các class này được dùng trong Swal.fire({ customClass: {...} }) */
@@ -417,4 +448,3 @@ body, html, #root {
   transform: translateY(-1px) !important;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3) !important;
 }
-

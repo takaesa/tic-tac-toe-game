@@ -5,7 +5,7 @@ import Swal from "sweetalert2"; // Đã được style hóa để phù hợp v�
 import useSocket from "./hooks/useSocket"; // Giả định hook useSocket tồn tại
 
 const BOARD_SIZE = 20; // Hoặc 10 tùy theo yêu cầu
-document.documentElement.style.setProperty('--board-size', BOARD_SIZE);
+document.documentElement.style.setProperty("--board-size", BOARD_SIZE);
 
 // Khởi tạo trạng thái bàn cờ mặc định với các số thứ tự ô
 const defaultGameState = Array.from({ length: BOARD_SIZE }, (_, row) =>
@@ -575,9 +575,9 @@ const App = () => {
             ))
           )}
         </div>
-          <div className="game-details">
-            {opponentName && <h2>Bạn đang chơi với {opponentName}</h2>}
-          </div>
+        <div className="game-details">
+          {opponentName && <h2>Bạn đang chơi với {opponentName}</h2>}
+        </div>
       </div>
     </div>
   );
