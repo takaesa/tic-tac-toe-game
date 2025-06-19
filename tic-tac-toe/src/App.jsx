@@ -25,6 +25,7 @@ const App = () => {
   const [rematchRequested, setRematchRequested] = useState(false); // Cờ báo hiệu đã gửi yêu cầu chơi lại
   const [rematchRequestReceived, setRematchRequestReceived] = useState(false); // Cờ báo hiệu đã nhận yêu cầu chơi lại
   const [mode, setMode] = useState(null); // Chế độ chơi: "random" (ngẫu nhiên) hoặc "friend" (bạn bè)
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light"); // Trạng thái Dark/Light Mode
 
   // Lấy host của socket từ biến môi trường (ví dụ: .env)
   const socket_host = process.env.REACT_APP_SOCKET_IO_HOST;
@@ -32,6 +33,20 @@ const App = () => {
 
   // Tham chiếu đến phần tử bàn cờ để có thể cuộn tới
   const boardRef = useRef(null);
+
+  // Cập nhật theme vào localStorage và thay đổi lớp body khi chế độ thay đổi
+  useEffect(() => {
+    // Lưu chế độ vào localStorage
+    localStorage.setItem("theme", theme);
+    // Thêm hoặc xóa lớp light/dark mode trên body
+    document.body.classList.remove("light-mode", "dark-mode");
+    document.body.classList.add(`${theme}-mode`);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    // Chuyển đổi giữa chế độ sáng và tối 
+    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
+  };
 
   // Hàm để đặt lại trò chơi về trạng thái ban đầu
   const resetGame = () => {
@@ -64,6 +79,7 @@ const App = () => {
     });
     return result;
   };
+
 
   // useEffect để xử lý popup khi trò chơi kết thúc (thắng/thua/hòa)
   useEffect(() => {
@@ -477,7 +493,7 @@ const App = () => {
   if (!playOnline) {
     return (
       <div className="main-container">
-        <h1 className="game-heading">Cờ Caro</h1>
+        <h1 className="game-heading"> Game Cờ Caro</h1>
         <div className="menu-section">
           <div className="menu-option-container">
             <h2>Chơi với người ngẫu nhiên</h2>
@@ -497,6 +513,9 @@ const App = () => {
             </button>
           </div>
         </div>
+        <button onClick={toggleTheme} className="toggle-theme-button">
+          Chuyển sang {theme === "light" ? "Dark" : "Light"} Mode
+          </button>
       </div>
     );
   }

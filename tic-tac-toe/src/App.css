@@ -2,15 +2,26 @@
 
 /* Định nghĩa các biến CSS để dễ dàng thay đổi theme */
 :root {
+  /* Dark Mode */
   --primary-bg: #1a202c; /* Màu nền chính (tối) */
   --secondary-bg: #2d3748; /* Màu nền phụ (tối hơn một chút) */
-  --accent-color-1: #63b3ed; /* Màu xanh dương cho 'cross' (X) / người chơi 1 */
-  --accent-color-2: #f6ad55; /* Màu cam cho 'circle' (O) / người chơi 2 */
+  --accent-color-1: #38a169; /* Màu xanh dương cho 'cross' (X) / người chơi 1 */
+  --accent-color-2: #38a169; /* Màu cam cho 'circle' (O) / người chơi 2 */
   --button-primary: #38a169; /* Màu xanh lá cây cho nút chính */
   --button-hover: #48bb78; /* Màu xanh lá cây khi hover nút */
   --text-color-light: #e2e8f0; /* Màu chữ sáng */
   --border-color: #4a5568; /* Màu viền xám */
   --font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; /* Font chữ hiện đại */
+
+  /* Light Mode */
+  --primary-bg-light: #ffffff; /* Màu nền chính (sáng) */
+  --secondary-bg-light: #f7fafc; /* Màu nền phụ (sáng hơn) */
+  --accent-color-1-light: #38a169; /* Màu xanh dương cho 'cross' (X) / người chơi 1 */
+  --accent-color-2-light: #38a169; /* Màu xanh lá cho 'circle' (O) / người chơi 2 */
+  --button-primary-light: #38a169; /* Màu xanh dương cho nút chính */
+  --button-hover-light: #48bb78; /* Màu xanh sáng khi hover nút */
+  --text-color-light-light: #263145; /* Màu chữ tối cho chế độ sáng */
+  --border-color-light: #c6d6e8; /* Màu viền sáng */
 }
 
 /* Global styles cho toàn bộ trang */
@@ -28,6 +39,86 @@ html,
   box-sizing: border-box; /* Model box-sizing chuẩn */
 }
 
+/*------------------- ------Dark Mode--------------------------- */
+
+/*----------------------------Light Mode------------------------- */
+body.light-mode {
+  background-color: #ffffff; /* Nền sáng */
+  color: #2d3748; /* Chữ tối */
+}
+body.light-mode .main-container {
+  background-color: #f7fafc; /* Nền sáng cho menu */
+}
+body.light-mode .game-heading {
+  color: black;
+}
+body.light-mode .menu-section {
+  border: none;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+body.light-mode .menu-option-container {
+  background-color: var(--secondary-bg-light); /* Nền sáng cho menu */
+  border: none;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+body.light-mode .menu-option-container h2 {
+  color: black;
+}
+body.light-mode .separator span {
+  color: gray;
+}
+body.light-mode .player-card {
+  background-color: white;
+  color: black;
+}
+body.light-mode .square-wrapper {
+ background-color: (113 112 123 / 70%);
+}
+/* Thay đổi màu sắc khi chế độ sáng */
+body.light-mode .separator span {
+  background-color: var(--primary-bg-light);
+  color: var(--border-color-light);
+}
+body.light-mode h2.turn-message {
+  color: black;
+}
+body.light-mode .game-details h2 {
+  color: black;
+}
+body.light-mode .swal2-popup {
+  background-color: #ffffff; /* Nền sáng cho popup */
+  border-radius: 10px; /* Bo tròn góc */
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Áp dụng bóng nhẹ cho popup */
+}
+body.light-mode .swal2-input {
+  background-color: #5f5c5c48; /* Nền sáng cho popup */
+  border-radius: 10px; /* Bo tròn góc */
+  padding: 20px;
+  color:#111;
+}
+body.light-mode .swal2-text {
+  color: black;
+}
+
+/*-------------Nút chuyển đổi chế độ-------------- */
+.toggle-theme-button {
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 10px 20px;
+  background-color: #38a169;
+  color: white;
+  cursor: pointer;
+  border-radius: 20px;
+  border: none;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+}
+.toggle-theme-button:hover {
+  text-decoration: underline;
+}
+
 /* Container chính của ứng dụng */
 .main-container {
   display: flex;
@@ -43,15 +134,15 @@ html,
   padding: 10px 30px;
   border-radius: 15px; /* Bo tròn góc */
   text-align: center;
-  font-size: 2.5rem; /* Kích thước font lớn */
+  font-size: 5rem; /* Kích thước font lớn */
   font-weight: 700;
   color: var(--text-color-light);
-  background: linear-gradient(
+  /* background: linear-gradient(
     135deg,
     #4b495f,
     #2d3748
-  ); /* Gradient nền mượt mà */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); /* Đổ bóng sâu hơn */
+  ); Gradient nền mượt mà */
+  /* box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); Đổ bóng sâu hơn */
   margin-bottom: 40px;
   letter-spacing: 1px; /* Khoảng cách chữ */
 }
@@ -60,10 +151,14 @@ html,
 .menu-section {
   display: flex;
   flex-direction: column; /* Xếp chồng các tùy chọn */
-  gap: 30px; /* Khoảng cách giữa các tùy chọn */
+  gap: 10px; /* Khoảng cách giữa các tùy chọn */
   max-width: 500px;
-  width: 100%;
+  width: 90%;
   align-items: center;
+  border: 1px solid #0d0d10;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  padding: 40px 0px;
+  border-radius: 20px;
 }
 
 /* Container cho mỗi tùy chọn trong menu */
@@ -71,14 +166,14 @@ html,
   background-color: var(--secondary-bg);
   padding: 30px;
   border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   text-align: center;
-  width: 100%;
+  width: 80%;
   box-sizing: border-box;
 }
 
 .menu-option-container h2 {
-  font-size: 1.8rem;
+  font-size: 1.3rem;
   margin-bottom: 20px;
   color: var(--text-color-light);
 }
@@ -95,15 +190,15 @@ html,
   ); /* Gradient nút */
   color: white;
   cursor: pointer;
-  width: auto;
-  border-radius: 10px; /* Bo tròn góc */
+  width: 50%;
+  border-radius: 50px; /* Bo tròn góc */
   outline: none;
   padding: 1rem 2rem;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   transition: all 0.3s ease; /* Hiệu ứng chuyển động mượt mà */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
 .play-button:hover {
@@ -116,7 +211,7 @@ html,
 .separator {
   display: flex;
   align-items: center;
-  width: 80%;
+  width: 90%;
   max-width: 300px;
   margin: 20px 0;
 }
@@ -206,7 +301,7 @@ html,
 
 /* Highlight người chơi hiện tại (dấu O) */
 .current-move-circle {
-  background-color: var(--accent-color-2) !important;
+  background-color: #2fbd55 !important;
   transform: translateY(-5px); /* Nâng nhẹ lên */
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
@@ -228,7 +323,7 @@ html,
   max-width: 80vh; /* Chiếm tối đa 95% chiều rộng viewport */
   max-height: 80vh; /* Chiếm tối đa 80% chiều cao viewport */
   overflow: auto; /* Cho phép scroll nếu bàn cờ lớn hơn màn hình */
-  border: 2px solid var(--border-color); /* Viền bàn cờ */
+  border: 2px solid #e2ebe2; /* Viền bàn cờ */
   border-radius: 5px;
   box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5); /* Đổ bóng bên trong */
   padding: 0.25rem;
@@ -261,8 +356,9 @@ html,
   }
 
   .menu-section {
-    margin-top: 10vh; /* Giảm margin top để cân đối */
-    padding: 15px;
+    /* margin-top: 10vh; Giảm margin top để cân đối */
+    padding: 40px 0px;
+    gap: 10px;
   }
 
   .menu-option-container {
@@ -319,7 +415,7 @@ html,
 /* Cho màn hình mobile nhỏ (max-width: 480px) */
 @media (max-width: 480px) {
   .game-heading {
-    font-size: 1.8rem;
+    font-size: 3rem;
     padding: 5px 15px;
     margin-bottom: 20px;
   }
@@ -333,7 +429,7 @@ html,
   }
 
   .menu-option-container h2 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
 
   .play-button {
@@ -363,7 +459,7 @@ html,
     max-width: 100vw;
     height: 90vw; /* Option, chỉ dùng 1 trong 2 */
     overflow: auto;
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
     padding: 2px;
@@ -387,7 +483,7 @@ html,
 /* Các class này được dùng trong Swal.fire({ customClass: {...} }) */
 
 .modern-swal-popup {
-  background: var(--secondary-bg) !important;
+  background: var(--secondary-bg);
   color: var(--text-color-light) !important;
   border-radius: 15px !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
@@ -401,13 +497,13 @@ html,
 }
 
 .modern-swal-text {
-  color: var(--text-color-light) !important;
-  font-size: 1rem !important;
+  color:gray;
+  font-size: 1.2rem !important;
 }
 
 .modern-swal-input {
-  background-color: var(--primary-bg) !important;
-  color: var(--text-color-light) !important;
+  background-color: var(--primary-bg);
+  color: var(--text-color-light) ;
   border: 1px solid var(--border-color) !important;
   border-radius: 8px !important;
   padding: 10px !important;
@@ -423,6 +519,7 @@ html,
   padding: 12px 25px !important;
   font-size: 1.1rem !important;
   margin: 5px !important;
+  border: none !important;
   transition: all 0.3s ease !important;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
 }
